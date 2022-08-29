@@ -20,18 +20,29 @@ int tab = line.find("\t"); // returns the first tab place
 
 
 void buf :: insertLine(std::string line , int n ){
-    line = remTabs(line); // you can remove this if you want tabs
+   //line = remTabs(line); // you can remove this if you want tabs
     lines.insert(lines.begin()+n, line); // puts the line in the right place 
 }
 
 void buf::appendLine(std::string line)
 {
-    line = remTabs(line); // just delete if you want tabs
-    lines.push_back(line); // add the line to the end ; 
+   line = remTabs(line); // just delete if you want tabs
+    lines.push_back(line.c_str()); // add the line to the end ; 
 }
 
 
 void buf::removeLine(int n)
 {
     lines.erase(lines.begin()+n); // removes the nth line 
+}
+std::string buf::  copy_line (int c_char ){
+    temp_line += lines[line][c_char] ;
+}
+
+std::string buf::  cut_line (std::string){
+    temp_line = lines[line] ;
+    removeLine(line); 
+}
+std::string buf::  past_line (int place){
+   appendLine("temp_line");
 }

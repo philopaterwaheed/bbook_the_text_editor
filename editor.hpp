@@ -14,7 +14,6 @@ char mode ;
 buf* buffer ;
 std :: string status ,save_status,filename;
 
-
     void moveUp();
     void moveDown();
     void moveLeft();

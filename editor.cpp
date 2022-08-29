@@ -57,7 +57,7 @@ void editor::updateStatus()
         status = "Exiting";
         break;
     }
-    status += "\tCOL: " + std::to_string(x) + "\tROW: " + std::to_string(y); // takes the position and prints them to string
+    status += "\tCOL: " + std::to_string(x) + "\tROW: " + std::to_string(buffer->line); // takes the position and prints them to string
 }
 
 
@@ -78,6 +78,7 @@ void editor::handleInput(int i)
                 moveDown();
                 return ;
 
+
         }
     switch(mode)
         {
@@ -93,6 +94,9 @@ void editor::handleInput(int i)
                         case 's' : //saves
                             saveFile();
                             break;
+                        case 67 :
+                            buffer->is_coping = 1;
+                            break;
                     }
                 break;
             case 'i': // the insert mode 
@@ -102,47 +106,57 @@ void editor::handleInput(int i)
                             mode = 'n';
                             break; 
                         case KEY_BACKSPACE:// handels the delete
-                            if(x == 0 && y > 0 ) // if we are at the begining of a line  that is not the first
+                            if(x == 0 && buffer->line > 0 ) // if we are at the begining of a line  that is not the first
                             {
-                                x = buffer->lines[y-1].length(); // changes the x to upove line length 
-                                buffer->lines[y-1] += buffer-> lines[y] ; // adds the line to the line apove it 
+                                x = buffer->lines[buffer->line-1].length(); // changes the x to upove line length 
+                                buffer->lines[buffer->line-1] += buffer-> lines[buffer->line] ; // adds the line to the line apove it 
                                 deleteLine(); // the line it self didn't get deleted so we have to
                                 moveUp();
                             }
-                            else if (y>=0 && x!=0 )
-                                buffer->lines[y].erase(--x,1); // "we" if the curser on e we delete w that's why we have the --x
-                                // remove a char
+                            else if (buffer->line >=0 && x!=0 )
+                                {
+                                    buffer->lines[buffer->line].erase(--x+buffer->l_char,1); // "we" if the curser on e we delete w that's why we have the --x
+                                    // remove a char
+                                
+                                }
+
+                        
                         break;
                         case KEY_DC : // the delete key
-                             if(x == buffer->lines[y].length() && y != buffer->lines.size() - 1) // if we at the end of a line and it's not the last one 
+                             if(x == buffer->lines[buffer->line].length() && y != buffer->lines.size() - 1) // if we at the end of a line and it's not the last one 
                                 {
-                                     buffer->lines[y] += buffer->lines[y+1]; // addes the line below 
-                                     deleteLine(y+1); // delete that line below
+                                     buffer->lines[buffer->line] += buffer->lines[buffer->line+1]; // addes the line below 
+                                     deleteLine(buffer->line+1); // delete that line below
                                 }
                              else
-                                buffer->lines[y].erase(x, 1);                             
+                                buffer->lines[buffer->line].erase(x+buffer->l_char, 1);                             
                         break;
                         case 10: // KEY_ENTER:
                             // puts the rest of the line down 
-                            if(x < buffer->lines[y].length()){ // if we are not at the end of the line
-                            buffer->insertLine(buffer->lines[y].substr(x, buffer->lines[y].length() - x), y + 1);
+                            if(x < buffer->lines[buffer->line].length()){ // if we are not at the end of the line
+                            buffer->insertLine(buffer->lines[buffer->line].substr(x+buffer->l_char, buffer->lines[buffer->line].length() - x), buffer->line + 1);
                                                 //creates a substring of current line                    // adds it to the line below 
-                            buffer->lines[y].erase(x, buffer->lines[y].length() - x);
+                            buffer->lines[buffer->line].erase(x+buffer->l_char, buffer->lines[buffer->line].length() - x);
                             // removes that of line that got down 
                             }
                             else // just adds an empty line 
-                                 buffer->insertLine("", y+1); 
+                                 buffer->insertLine("", buffer->line+1); 
                         x=0 ;  // start at the end of line 
                         moveDown();
                         break;
                     case 9 : // the tab key
-                        buffer->lines[y].insert(x, 4, ' '); // adds four spaces 
+                        buffer->lines[buffer->line].insert(x, 4, ' '); // adds four spaces 
                         x+=4;
                         break;
+                    case 16 :
+                        buffer->past_line(x);
                     default:
                         //for handling any other char
-                        buffer->lines[y].insert(x, 1, char(i));
-                        x++;
+                            buffer->lines[buffer->line].insert(x+buffer->l_char, 1, char(i));
+                        if(buffer->l_char==0)
+                            x++;
+                        else
+                          buffer-> l_char++; 
                         save_status= "changes accured please save "; // changes happened so we say so 
                         break;
                     }
@@ -156,54 +170,136 @@ void editor::handleInput(int i)
 // note move () is a ncurses function to move curser 
 void editor:: moveLeft ()
     {
-        if (x-1 >= 0)
+       
+        if (x == 0 &&  buffer->l_char !=0 )
+                    buffer->l_char -- ;  
+        else if (x-1 >= 0 ) // if we are not at the first element
             {
-                x--;
-                move(y,x);
+                x--; // move left 
+               
             }
-    }
-
+        else  // if we are at the begining of line 
+            { 
+                if (y==0 && buffer->l_line == 0) // makes sure that we are not at the first line of the file to not breake the program 
+                    return ; //breaks the unction
+                if(y-1 >= 0 ) // if we are not on the first  
+                    {
+                        y--;
+                        buffer->line--;
+                        x= buffer->lines[buffer->line].size();
+                         buffer->l_char = (COLS < buffer->lines[buffer->line].size())?  buffer->lines[buffer->line].size() - COLS + 
+                         1: 0;
+                         x = (COLS < buffer->lines[buffer->line].size())?  COLS -1 : buffer->lines[buffer->line].size();
+                    }
+                else if (y-1 < 0 && buffer->l_line > 0 && buffer->l_line + y < buffer->lines.size()) // if y =0 and there are still lines in the file above 
+                    {
+                        buffer->l_line -- ;
+                        buffer->line--;
+                        x= buffer->lines[buffer->line].size();
+                        buffer->l_char = (COLS < buffer->lines[buffer->line].size())?  buffer->lines[buffer->line].size() - COLS + 1 : 0;
+                        x = (COLS < buffer->lines[buffer->line].size()) ?  COLS - 1  : buffer->lines[buffer->line].size();
+                    }
+                
+            }
+            move(y,x);
+     
+    
+}
 void editor::moveRight()
 {
-    if(x+1 < COLS && x+1 <= buffer->lines[y].length()) // if we move right and still in the line
+    if(x+1 < COLS && x+1 < buffer->lines[buffer->line].length()) // if we move right and still in the line
     {
         x++;
-        move(y, x);
     }
+    else if (y+1 <= LINES-11 && y+1 < buffer->lines.size() && x + 1 +buffer->l_char >= buffer->lines[buffer->line].size() )  // if we are at the end of the line  
+        {
+            y++ ; //move to the line below
+            buffer->line++;
+            x= 0 ; // at the start of it
+            buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 :0;
+
+        }
+    else if (x + 1 +buffer->l_char  >= buffer->lines[buffer->line].size() && y >= LINES-11 && buffer->l_line + +LINES-10< buffer->lines.size()) // if we are at the end of last line 
+        {
+                    buffer->l_line ++;
+                    buffer->line++;
+                    x=0;
+                    buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 : 0;
+        }  
+    else // if ( x == COLS && x < buffer->lines[buffer->line].length() )
+        {
+            buffer->l_char ++;
+            //x++ ; 
+        }   
+    move(y, x);
 }
 
 void editor::moveUp()
 {
-    if(y-1 >= 0) // if we are not on the first 
-        y--;
-    if(x >= buffer->lines[y].length())
-        x = buffer->lines[y].length();
-    move(y, x);
+    
+    
+        if(y-1 >= 0) // if we are not on the first 
+            {
+                    y--;
+                    buffer->line--;
+            }
+        if (y-1 < 0 && buffer->l_line > 0 && buffer->l_line+y < buffer->lines.size()) // if we  are at first but there more lines in the file 
+            {
+                buffer->l_line -- ;
+                buffer->line--;
+            }
+
+        if(x >= buffer->lines[buffer->line].length())
+            x = buffer->lines[buffer->line].length();
+        
+        move(y, x);
+    
 }
 
 void editor::moveDown()
 {
-    if(y+1 < LINES-1 && y+1 < buffer->lines.size())
+    if(y+1 <= LINES-11 && y+1 < buffer->lines.size())
+        {
+        buffer->line++;
         y++;
-    if(x >= buffer->lines[y].length())
-        x = buffer->lines[y].length();
+        }
+
+     if (y >= LINES-11 && buffer->l_line + +LINES-10< buffer->lines.size())  // if we are at last but there are more lines in the file 
+        {    
+            buffer->l_line ++;
+            buffer->line++;
+        }
+   
+    if(x >= buffer->lines[buffer->line].length())
+        x = buffer->lines[buffer->line].length();
+    refresh();
     move(y, x);
 }
 
 
 void editor::printBuff()
 {
-    for(int i=0; i<LINES-11; i++) // for every line just before the border of the box
-    {
-        if(i >= buffer->lines.size())
+    refresh();
+    for(int i=0; i<LINES-10; i++) // for every line just before the border of the box
+    {   
+        
+        if( i + buffer->l_line  >= buffer->lines.size( ))
         {
             move(i, 0); // move to the new line 
             clrtoeol(); // clear what is in that line 
         }
+        else  if (buffer->l_line > 0) 
+        {
+            std :: string temp = buffer->lines[i + buffer->l_line ];
+            mvprintw(i, 0, "%s", temp.erase(0,buffer->l_char).c_str()); // an ncurses function prints to screen where you want to takes a line of type c string
+        
+        }
         else
         {
-            mvprintw(i, 0, buffer->lines[i].c_str()); // an ncurses function prints to screen where you want to takes a line of type c string
+            std:: string temp = buffer->lines[i];
+            mvprintw(i, 0, "%s",temp.erase(0,buffer->l_char).c_str() ); // an ncurses function prints to screen where you want to takes a line of type c string
         }
+         
          clrtoeol(); // clear the rest of the line 
     }
    
@@ -211,18 +307,18 @@ void editor::printBuff()
    
    
 }
-
 void editor::printStatusLine()
 {
     
    
     refresh(); // refreshs before waiting input
     WINDOW* status_window; //creats a ncur window pointer 
-    status_window = newwin(/*height*/9,/*width*/ COLS-10 ,/*y*/LINES-10,5/*x*/); // creats a new window beacuse all we created is a pointer
+    status_window = newwin(/*height*/8,/*width*/ COLS-10,/*y*/LINES-10,5/*x*/); // creats a new window beacuse all we created is a pointer
     
     box(status_window,0,0); //border for our window
-    mvwprintw(status_window,1,1, status.c_str()); // print the status string
-    mvwprintw(status_window,2,1, save_status.c_str()); 
+    mvwprintw(status_window,1,1, "%s", status.c_str()); // print the status string
+    mvwprintw(status_window,2,1, "%s", save_status.c_str()); 
+    mvwprintw(status_window,3,1, "%d", buffer->l_char);
     wrefresh(status_window); // refreshes the window
 
     
@@ -232,12 +328,14 @@ void editor::printStatusLine()
 
 void editor::deleteLine()
 {
-    buffer->removeLine(y);
+    buffer->removeLine(buffer->line);
+    refresh();
 }
 
 void editor::deleteLine(int i)
 {
     buffer->removeLine(i);
+    refresh();
 }
 
 
@@ -299,8 +397,3 @@ void editor::saveFile()
     f.close();
     
 }
-
-
-
-
-
