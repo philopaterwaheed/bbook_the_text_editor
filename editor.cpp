@@ -138,6 +138,7 @@ void editor::handleInput(int i)
                                                 //creates a substring of current line                    // adds it to the line below 
                             buffer->lines[buffer->line].erase(x+buffer->l_char, buffer->lines[buffer->line].length() - x);
                             // removes that of line that got down 
+                            x=buffer->l_char=0;
                             }
                             else // just adds an empty line 
                                  buffer->insertLine("", buffer->line+1); 
@@ -207,7 +208,7 @@ void editor:: moveLeft ()
 }
 void editor::moveRight()
 {
-    if(x+1 < COLS && x+1 < buffer->lines[buffer->line].length()) // if we move right and still in the line
+    if(x + buffer->l_char+1 < COLS && x+1 < buffer->lines[buffer->line].length()) // if we move right and still in the line
     {
         x++;
     }
@@ -249,9 +250,17 @@ void editor::moveUp()
                 buffer->line--;
             }
 
-        if(x >= buffer->lines[buffer->line].length())
-            x = buffer->lines[buffer->line].length();
-        
+        /*if(x + buffer -> l_char < buffer->lines[buffer->line].size())
+            {
+                moveRight();
+                moveLeft();
+            }*/
+        if (x + buffer -> l_char >= buffer->lines[buffer->line].size())
+            {
+                buffer->l_char = (COLS < buffer->lines[buffer->line].size())?  buffer->lines[buffer->line].size() - COLS+1  : 0; 
+                x = (COLS < buffer->lines[buffer->line].size()) ?  COLS - 1  : buffer->lines[buffer->line].size();
+            }
+          
         move(y, x);
     
 }
@@ -270,8 +279,13 @@ void editor::moveDown()
             buffer->line++;
         }
    
-    if(x >= buffer->lines[buffer->line].length())
-        x = buffer->lines[buffer->line].length();
+    // if(x >= buffer->lines[buffer->line].length())
+    //     x = buffer->lines[buffer->line].length();
+    if (x + buffer -> l_char >= buffer->lines[buffer->line].size())
+        {
+            buffer->l_char = (COLS < buffer->lines[buffer->line].size())?  buffer->lines[buffer->line].size() - COLS+1  : 0; 
+            x = (COLS < buffer->lines[buffer->line].size()) ?  COLS - 1  : buffer->lines[buffer->line].size();  
+        }
     refresh();
     move(y, x);
 }
