@@ -57,7 +57,7 @@ void editor::updateStatus()
         status = "Exiting";
         break;
     }
-    status += "\tCOL: " + std::to_string(x) + "\tROW: " + std::to_string(buffer->line); // takes the position and prints them to string
+    status += "\tCOL: " + std::to_string(x+buffer->l_char) + "\tROW: " + std::to_string(buffer->line); // takes the position and prints them to string
 }
 
 
@@ -77,15 +77,18 @@ void editor::handleInput(int i)
             case KEY_DOWN:
                 moveDown();
                 return ;
-
-
+            case 20 : // ctrl + t for the terminal 
+                
+                terminal->getting_input_term =1;
+                terminal_print();
+                break;
         }
     switch(mode)
         {
             case 'n': // normal mode has it's own key set we switch between them
                 switch(i)
                     {
-                        case 'x' : // exits 
+                        case 27  : // exits by the escape key  
                             mode = 'x' ;
                             break ;
                         case 'i': // switchs to insert mode 
@@ -165,6 +168,7 @@ void editor::handleInput(int i)
 
 
                     }
+   
 }
 
 // movement 
@@ -208,7 +212,7 @@ void editor:: moveLeft ()
 }
 void editor::moveRight()
 {
-    if(x + buffer->l_char+1 < COLS && x+1 < buffer->lines[buffer->line].length()) // if we move right and still in the line
+    if(x /*+ buffer->l_char*/+1 < COLS && x+1 < buffer->lines[buffer->line].length()) // if we move right and still in the line and still in the visible era of ncurses
     {
         x++;
     }
@@ -227,7 +231,7 @@ void editor::moveRight()
                     x=0;
                     buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 : 0;
         }  
-    else // if ( x == COLS && x < buffer->lines[buffer->line].length() )
+    else if ( x == COLS && x < buffer->lines[buffer->line].length() )
         {
             buffer->l_char ++;
             //x++ ; 
@@ -318,8 +322,6 @@ void editor::printBuff()
     }
    
    move(y, x); // move where the curser was before 
-   
-   
 }
 void editor::printStatusLine()
 {
@@ -332,7 +334,7 @@ void editor::printStatusLine()
     box(status_window,0,0); //border for our window
     mvwprintw(status_window,1,1, "%s", status.c_str()); // print the status string
     mvwprintw(status_window,2,1, "%s", save_status.c_str()); 
-    mvwprintw(status_window,3,1, "%d", buffer->l_char);
+    mvwprintw(status_window,1,COLS-28, "c_t -> terminal");
     wrefresh(status_window); // refreshes the window
 
     
@@ -352,7 +354,22 @@ void editor::deleteLine(int i)
     refresh();
 }
 
+void editor::terminal_print()
+{
 
+    
+    if (terminal->getting_input_term)
+        {       
+            wclear(terminal->terminal_window);
+            terminal -> terminal_window = newwin(/*height*/LINES- 11,/*width*/ COLS-10,/*y*/1,5/*x*/);
+            box(terminal -> terminal_window ,0,0);
+            wrefresh( terminal -> terminal_window );
+            terminal->get_input(); 
+            
+            
+        }
+        
+   }
 void editor::saveFile()
 {   
     std::string temp = filename; // to save the file name before edit 
@@ -411,3 +428,5 @@ void editor::saveFile()
     f.close();
     
 }
+
+

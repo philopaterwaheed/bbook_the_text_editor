@@ -5,13 +5,15 @@
 
 #include <ncurses.h>
 #include "buffer.hpp"
-
+#include "terminal.hpp"
 
 
 class editor {
 int x,y ; // position on screen 
 char mode ; 
-buf* buffer ;
+buf * buffer ;
+Term * terminal = terminal = new Term;
+
 std :: string status ,save_status,filename;
 
     void moveUp();
@@ -24,6 +26,7 @@ std :: string status ,save_status,filename;
     void saveFile();                    
 
 public: 
+        
         editor();
         editor(std::string); // with a file name 
             char getMode() {return mode;}
@@ -31,6 +34,7 @@ public:
             void printBuff();
             void printStatusLine();             // Prints the status line (like vim!!!)
             void updateStatus();                // Updates the status line (text, not display)
+            void terminal_print (); 
 };
 
 #endif
