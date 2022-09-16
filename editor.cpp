@@ -231,7 +231,7 @@ void editor::moveRight()
                     x=0;
                     buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 : 0;
         }  
-    else if ( x == COLS && x < buffer->lines[buffer->line].length() )
+    else if ( x +1 == COLS && x < buffer->lines[buffer->line].length() )
         {
             buffer->l_char ++;
             //x++ ; 
@@ -384,12 +384,13 @@ void editor::saveFile()
                     break;
                 else if (input == KEY_BACKSPACE)    // the erase 
                     {
-                        filename=filename.erase((filename.length())-1); // erases the last element 
-                            if (filename=="") // if the user goes byond that a buffer over flew happens so we should prevent that
+                        
+                            if (filename.size()==0) // if the user goes byond that a buffer over flew happens so we should prevent that
                                 {
-                                    filename=temp; // returns file name to where it was 
-                                    return; // exits the save 
+                                    filename=""; // just to prevent the 
                                 }
+                            else 
+                                filename=filename.erase((filename.length())-1); // erases the last element 
                     }   
                 else if (input == 27/* escape */) // if user wants to cancle 
                     {
