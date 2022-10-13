@@ -221,7 +221,7 @@ void editor::moveRight()
             y++ ; //move to the line below
             buffer->line++;
             x= 0 ; // at the start of it
-            buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 :0;
+            buffer->l_char = 0 ; //(COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 :0;
 
         }
     else if (x + 1 +buffer->l_char  >= buffer->lines[buffer->line].size() && y >= LINES-11 && buffer->l_line + +LINES-10< buffer->lines.size()) // if we are at the end of last line 
@@ -229,9 +229,9 @@ void editor::moveRight()
                     buffer->l_line ++;
                     buffer->line++;
                     x=0;
-                    buffer->l_char = (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 : 0;
+                    buffer->l_char = 0 ; //  (COLS < buffer->lines[buffer->line+1].size())?  buffer->lines[buffer->line+1].size() - COLS + 1 : 0;
         }  
-    else if ( x +1 == COLS && x < buffer->lines[buffer->line].length() )
+    else if ( x +1 == COLS && x + buffer->l_char< buffer->lines[buffer->line].length() )
         {
             buffer->l_char ++;
             //x++ ; 
