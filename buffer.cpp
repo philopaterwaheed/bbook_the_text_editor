@@ -26,14 +26,16 @@ void buf :: insertLine(std::string line , int n ){
 
 void buf::appendLine(std::string line)
 {
-   line = remTabs(line); // just delete if you want tabs
+    line = remTabs(line); // just delete if you want tabs
     lines.push_back(line.c_str()); // add the line to the end ; 
+    
 }
 
 
 void buf::removeLine(int n)
 {
     lines.erase(lines.begin()+n); // removes the nth line 
+    lines.shrink_to_fit();
 }
 std::string buf::  copy_line (int c_char ){
     temp_line += lines[line][c_char] ;
@@ -45,4 +47,14 @@ std::string buf::  cut_line (std::string){
 }
 std::string buf::  past_line (int place){
    appendLine("temp_line");
+}
+
+int buf:: space_for_numbers( int size ){
+    int count= 0  ; 
+    while (size !=0 )
+    {   
+        size/=10  ; 
+        count++ ;
+    }
+    return count+2;
 }
