@@ -20,11 +20,11 @@ std :: string status ,save_status,filename;
     void moveDown();
     void moveLeft();
     void moveRight();
-
     void deleteLine();                  // current 
     void deleteLine(int);               // nth line 
     void saveFile();                    
-
+    int goto_firstofline();
+    int  at_first_line(); 
 public: 
         
         editor();
