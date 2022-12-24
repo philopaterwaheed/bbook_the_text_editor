@@ -22,9 +22,11 @@ std :: string status ,save_status,filename;
     void moveRight();
     void deleteLine();                  // current 
     void deleteLine(int);               // nth line 
-    void saveFile();                    
-    int goto_firstofline();
-    int  at_first_line(); 
+    void saveFile();
+    void  goto_lastof_line(int n =0 );                  
+    int   goto_firstofline();
+    int   at_first_line(); 
+    int   at_lastof_line ();
 public: 
         
         editor();

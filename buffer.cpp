@@ -30,8 +30,12 @@ void buf::appendLine(std::string line)
     lines.push_back(line.c_str()); // add the line to the end ; 
     
 }
-
-
+void buf:: injectIntoLine (std::string line  ,int x ) 
+{
+    this->lines[this->line].insert(x, line) ;
+    //this->lines[line].insert(lines[line].begin()+x, line)
+    
+}
 void buf::removeLine(int n)
 {
     lines.erase(lines.begin()+n); // removes the nth line 
@@ -45,8 +49,8 @@ std::string buf::  cut_line (std::string){
     temp_line = lines[line] ;
     removeLine(line); 
 }
-std::string buf::  past_line (int place){
-   appendLine("temp_line");
+std::string buf::  paste_line (int line , int x ){
+   injectIntoLine("temp_line",x);
 }
 
 int buf:: space_for_numbers( int size ){

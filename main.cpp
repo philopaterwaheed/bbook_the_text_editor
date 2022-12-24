@@ -10,7 +10,7 @@ editor Editor;
         noecho();  // don't echo keystrokes
         cbreak();  // stops line buffering
         keypad(stdscr , true); 
-        
+        //start_color(); 
 
 
         }
