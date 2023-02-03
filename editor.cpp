@@ -59,7 +59,7 @@ void editor::updateStatus()
         status = "Exiting";
         break;
     }
-    status += "\tCOL: " + std::to_string(x+buffer->l_char) + "\tROW: " +std::to_string(buffer->line)+ std::to_string(buffer->lines.size()) +" "+buffer->goto_line; // takes the position and prints them to string
+    status += "\tCOL: " + std::to_string(x+buffer->l_char) + "\tROW: " +std::to_string(buffer->line)+ " "+ std::to_string(buffer->line_st_highlight) +" "+buffer->goto_line; // takes the position and prints them to string
 }
 
 void editor::handleInput(int i)
@@ -68,18 +68,23 @@ void editor::handleInput(int i)
         {
             case KEY_LEFT:
                 moveLeft(); 
+                break_highlight();
                 return ;
             case KEY_RIGHT:
                 moveRight();
+                break_highlight(); 
                 return ;
             case KEY_UP:
                 moveUp();
+                break_highlight();
                 return ;
             case KEY_DOWN:
                 moveDown();
+                break_highlight(); 
                 return ;
             case 262 : // home botton
                 goto_firstofline() ;
+                break_highlight();
                 return ; //to prevent typing it's code while in insert 
             case 7:
                 char goto_line[20];
@@ -93,6 +98,7 @@ void editor::handleInput(int i)
                 buffer->l_line+=temp- buffer->l_line;                       
                 goto_firstofline();
                 y=0;
+                break_highlight();
                 return ;
             case 20 : // ctrl + t for the terminal 
                 
@@ -103,11 +109,17 @@ void editor::handleInput(int i)
                 goto_lastof_line();
                 return; 
             case  393 : // shiftleft
-            //wattron(main_win, A_REVERSE);
+                highlight_logic(393);
+                return; 
             case  402  : // shift right
+                highlight_logic(402);
+                return ; 
             case  337 :  // shift up
+                highlight_logic(337);
+                return;
             case  336:  // shift down
-                break;
+                highlight_logic(336);
+                return;
         }
     switch(mode)
         {
@@ -161,8 +173,14 @@ void editor::handleInput(int i)
                                 moveRight();
                             }
                             break;
-                        case 67 : // shift + c 
-                            buffer->paste_line(buffer->line , x+ buffer->l_char) ; 
+                        case 67 : //shift + c 
+                            buffer->copy_line(buffer->first_ch_highlight , buffer->last_ch_highlight , buffer->line_st_highlight,buffer->line_lst_highlight ) ;
+                            break ; 
+                        case 88 : // shift + x 
+                            buffer->cut_line(buffer->first_ch_highlight , buffer->last_ch_highlight , buffer->line_st_highlight,buffer->line_lst_highlight ) ;
+                            break; 
+                        case 86 : // shift + v 
+                            buffer->paste_line(buffer->line , buffer->lines_paste ,x+ buffer->l_char) ; 
                             break;
                     }
                 break;
@@ -236,6 +254,7 @@ void editor::handleInput(int i)
 
                     }
 space_for_numbers = buffer->space_for_numbers(buffer->lines.size()); // updates the spcace for the numbers  
+break_highlight(); // every action breaks the highlight also every return should do  
 }
 
 //  ### movement ###
@@ -369,48 +388,73 @@ void editor::printBuff()
     for(int i=0 ; i<LINES-10; i++) // for every line just before the border of the box
     { 
         wattrset(line_num_win,A_BOLD );
- 
-        
-        if( i + buffer->l_line  >= buffer->lines.size( ))
+        if( i + buffer->l_line  >= buffer->lines.size(          ) )
         {
              // move to the new line
             wmove(main_win,i, 0);
             wclrtoeol(main_win);
             wmove(line_num_win,i, 0);
             wclrtoeol(line_num_win); // clear what is in that line 
-            
         }
         else  if (buffer->l_line > 0) 
         {
             std :: string temp = buffer->lines[i + buffer->l_line ];
-           
             mvwprintw(line_num_win,i, 0, "%s", (std::to_string(i + buffer->l_line )+"|" ).c_str() );
-            mvwprintw(main_win,i, 0, "%s", (temp.erase(0,buffer->l_char)).c_str() ); // an ncurses function prints to screen where you want to takes a line of type c string
-         
-        }
+            temp.erase(0,buffer->l_char);
+            for (int o =0 ; o <temp.size()  ; o++)
+            {
+                               
+                if (( i + buffer->l_line  >= buffer->line_st_highlight &&  i + buffer->l_line <= buffer->line_lst_highlight) && buffer->line_st_highlight != buffer->line_lst_highlight)
+                 {
+                    if (( i + buffer->l_line  == buffer->line_st_highlight && o >=  buffer->first_ch_highlight ) || ( i + buffer->l_line > buffer->line_st_highlight &&  i + buffer->l_line < buffer->line_lst_highlight ) || ( i + buffer->l_line  == buffer-> line_lst_highlight && o <= buffer->last_ch_highlight )) 
+                        wattrset(main_win,A_REVERSE);
+                    else 
+                        wattroff(main_win,A_REVERSE); 
+                 }
+                 else if ( i + buffer->l_line  == buffer->line_st_highlight &&   i + buffer->l_line  == buffer->line_lst_highlight && buffer->line_st_highlight == buffer->line_lst_highlight) 
+                    {
+                        if (( o >= buffer->first_ch_highlight  && o <= buffer->last_ch_highlight ))
+                            wattrset(main_win,A_REVERSE);
+                         else
+                            wattroff(main_win,A_REVERSE); 
+                    }
+                 else 
+                   wattroff(main_win,A_REVERSE);  
+                mvwprintw(main_win,i, o, "%c", (temp)[o] ); // an ncurses function prints to screen where you want to takes a line of type c string                   
+
+            }
+        }   
+        
         else
         {
-            std:: string temp = buffer->lines[i];
-           
+            std:: string temp = buffer->lines[i]; 
             mvwprintw(line_num_win,i, 0, "%s", (std::to_string(i + buffer->l_line )+"|" ).c_str() );
-            mvwprintw(main_win,i, 0, "%s",( temp.erase(0,buffer->l_char)).c_str() ); // an ncurses function prints to screen where you want to takes a line of type c string
-
-        }
-       if (i==1)
-        {   
-        for (int x =0; x<10 ; x++)
+            temp.erase(0,buffer->l_char) ;
+            for (int o = 0 ; o < temp.size()  ; o++)
             {
-                wmove(main_win,i, x);
-                if (x < 5)
-                wattron(main_win, A_REVERSE)  ;
-                else
-                wattroff(main_win, A_REVERSE); 
-           }
+                
+                if ((i >= buffer->line_st_highlight &&  i <= buffer->line_lst_highlight) && buffer->line_st_highlight != buffer->line_lst_highlight)
+                 {
+                    if ((i == buffer->line_st_highlight && o >=  buffer->first_ch_highlight - buffer->l_char ) || (i > buffer->line_st_highlight && i < buffer->line_lst_highlight ) || (i == buffer-> line_lst_highlight && o <= buffer->last_ch_highlight - buffer->l_char )) 
+                        wattrset(main_win,A_REVERSE);
+                    else 
+                        wattroff(main_win,A_REVERSE); 
+                 }
+                 else if (i == buffer->line_st_highlight &&  i == buffer->line_lst_highlight ) 
+                    {
+                        if (( o >= buffer->first_ch_highlight - buffer->l_char  && o <= buffer->last_ch_highlight - buffer->l_char ))
+                            wattrset(main_win,A_REVERSE);
+                         else
+                         wattroff(main_win,A_REVERSE); 
+                    }
+                 else 
+                   wattroff(main_win,A_REVERSE);  
+                mvwprintw(main_win,i, o, "%c" , temp[o] ); // an ncurses function prints to screen where you want to takes a line of type c string
+             }  
+                
+        }   
         
-        }
-
-         else
-         wattroff(main_win, A_REVERSE);
+        // highlighting the selected 
 
          wclrtoeol(line_num_win);
          wclrtoeol(main_win); // clear the rest of the line 
@@ -515,13 +559,13 @@ void editor::saveFile()
         
     }
 
-    std::ofstream f(filename);
+    std::ofstream f (" output_cut");
     if(f.is_open())
     {
         
-        for(int i=0; i<buffer->lines.size(); i++)
+        for(int i=0; i<buffer->lines_paste.size(); i++)
         {
-            f << buffer->lines[i] << std::endl;
+            f << buffer->lines_paste[i] << std::endl;
         }
        save_status = "Saved to file to " +filename +" !"; // displays where is the file saved
         
@@ -536,11 +580,8 @@ void editor::saveFile()
 //##### place checing ######
 void editor:: goto_lastof_line (int n  )
 {
-        // buffer->l_char = (COLS - space_for_numbers < buffer->lines[buffer->line].size())?  buffer->lines[buffer->line].size() - COLS+1 + space_for_numbers  : 0; 
-        // x = (COLS - space_for_numbers < buffer->lines[buffer->line].size()) ?  COLS - 1 - space_for_numbers  : buffer->lines[buffer->line].size();
     buffer->l_char = (COLS - space_for_numbers < buffer->lines[buffer->line-n].size())?  buffer->lines[buffer->line-n].size() - COLS + 1 + space_for_numbers : 0;
     x = (COLS - space_for_numbers < buffer->lines[buffer->line-n].size()) ?  COLS - 1 - space_for_numbers  : buffer->lines[buffer->line-n].size(); 
-
 }
 int editor:: goto_firstofline()
 {
@@ -568,4 +609,154 @@ int editor:: at_first_line ()
         return 2 ;
     else //if (y ==0 && buffer->l_line == 0 && buffer->l_line+ y == buffer->lines.size() )// at the first line and it is the first line of the file 
         return 0 ; 
+}
+void  editor::highlight_logic (int input ) {
+    switch (input)
+    {
+        case 393 : // sheft +left 
+    
+            if  (buffer->line_st_highlight == -1 && buffer->line_lst_highlight == -1  ) // checks the line we are at after moving 
+            { 
+                
+                if  (buffer->last_ch_highlight == -1 )  
+                {    
+                    buffer->last_ch_highlight = buffer-> first_ch_highlight= buffer->l_char + x ;
+                    buffer->line_lst_highlight  = buffer->line_st_highlight =  buffer->line  ; 
+                     
+                }
+            }
+            else  
+                {
+                if (x + buffer->l_char  == buffer->first_ch_highlight && buffer->line == buffer->line_st_highlight) 
+                    {
+                        moveLeft();
+                        buffer-> first_ch_highlight = buffer->l_char + x ;
+                        buffer->line_st_highlight =  buffer->line ;
+                    }
+                else if ( x+ buffer->l_char == buffer->last_ch_highlight && buffer->line == buffer->line_lst_highlight)
+                    {
+                        moveLeft();  
+                       buffer->last_ch_highlight = buffer->l_char + x ;
+                        buffer->line_lst_highlight =  buffer->line ;
+                        break;
+                    }
+
+                }
+            
+        break; 
+    case 402: // shift right 
+            if  (buffer->line_st_highlight == -1 && buffer->line_lst_highlight == -1  ) // checks the line we are at after moving 
+                { 
+                
+                if  (buffer->last_ch_highlight == -1 )  
+                {    
+                    buffer->last_ch_highlight = buffer-> first_ch_highlight= buffer->l_char + x ;
+                    buffer->line_lst_highlight  = buffer->line_st_highlight = buffer->line  ; 
+                }
+            }
+            else  
+                {
+                if (x + buffer->l_char  == buffer->last_ch_highlight && buffer->line == buffer->line_lst_highlight) 
+                    {
+                        moveRight();
+                        buffer-> last_ch_highlight = buffer->l_char + x ;
+                        buffer->line_lst_highlight =  buffer->line ;
+                    }
+                else if ( x+ buffer->l_char == buffer->first_ch_highlight && buffer->line == buffer->line_st_highlight)
+                    {
+                        moveRight();  
+                        buffer->first_ch_highlight = buffer->l_char + x ;
+                        buffer->line_st_highlight =  buffer->line ;
+                    }
+
+                }
+        break;
+    case 337 :
+        if  (buffer->line_st_highlight == -1 && buffer->line_lst_highlight == -1  ) // checks the line we are at after moving 
+                { 
+                
+                if  (buffer->last_ch_highlight == -1 )  
+                {    
+                    buffer->last_ch_highlight = buffer->l_char + x ;
+                    buffer->line_lst_highlight  = buffer->line  ;
+                    moveUp() ; 
+                    buffer-> first_ch_highlight = buffer->l_char + x ;
+                    buffer->line_st_highlight = buffer->line  ;
+                }
+            }
+        else  
+            {
+                if (x + buffer->l_char  == buffer->first_ch_highlight && buffer->line == buffer->line_st_highlight) 
+                    {
+                        moveUp();
+                        buffer-> first_ch_highlight = buffer->l_char + x ;
+                        buffer->line_st_highlight =  buffer->line ;
+                    }
+                else if ( (x+ buffer->l_char == buffer->last_ch_highlight && buffer->line == buffer->line_lst_highlight))
+                    {
+                        moveUp();  
+                        
+                       buffer->last_ch_highlight = buffer->l_char + x ;
+                        buffer->line_lst_highlight =  buffer->line ;
+                        if ( buffer->line_lst_highlight==  buffer->line_st_highlight && buffer->last_ch_highlight < buffer->first_ch_highlight ) // if we moved to a place before the last one 
+                            {
+                                int temp = buffer->first_ch_highlight  ;
+                                buffer->first_ch_highlight = buffer->last_ch_highlight;
+                                 buffer->last_ch_highlight =temp;  
+                            }
+                    }
+
+                }
+        break;  
+    case 336 : 
+        if  (buffer->line_st_highlight == -1 && buffer->line_lst_highlight == -1  ) // checks the line we are at after moving 
+                { 
+                
+                if  (buffer->last_ch_highlight == -1 )  
+                {    
+                    buffer->first_ch_highlight = buffer->l_char + x ;
+                    buffer->line_st_highlight  = buffer->line  ;
+                    moveDown() ; 
+                    buffer-> last_ch_highlight = buffer->l_char + x ;
+                    buffer->line_lst_highlight = buffer->line  ;
+                }
+            }
+        else  
+                {
+                if (x + buffer->l_char  == buffer->last_ch_highlight && buffer->line == buffer->line_lst_highlight) 
+                    {
+                        moveDown();
+                        buffer-> last_ch_highlight = buffer->l_char + x ;
+                        buffer->line_lst_highlight =  buffer->line ;
+                    }
+                else if ( x+ buffer->l_char == buffer->first_ch_highlight && buffer->line == buffer->line_st_highlight && buffer->line_st_highlight != buffer->line_lst_highlight)
+                    {   
+                        if ( buffer->line_lst_highlight==  buffer->line_st_highlight )
+                            {
+                                int temp = buffer->line_st_highlight;
+                                buffer->line_st_highlight= buffer->line_lst_highlight ;
+                                buffer->line_lst_highlight =temp;  
+                            }
+                        moveDown();  
+                        buffer->first_ch_highlight = buffer->l_char + x ;
+                        buffer->line_st_highlight =  buffer->line ;
+
+                    }
+                else 
+                    {
+                        buffer->first_ch_highlight = buffer->l_char + x ;
+                        buffer->line_st_highlight  = buffer->line  ;
+                        moveDown();
+                        buffer-> last_ch_highlight = buffer->l_char + x ;
+                        buffer->line_lst_highlight =  buffer->line ;
+                    }
+
+                }
+
+}
+
+} 
+void editor ::  break_highlight() {
+    buffer->line_st_highlight  =  buffer-> line_lst_highlight = 
+	buffer->first_ch_highlight =  buffer->last_ch_highlight = -1 ;
 }
