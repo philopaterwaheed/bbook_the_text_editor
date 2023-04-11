@@ -1,12 +1,13 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 //????????????????????
-
+#include <sys/stat.h>
 #include <ncurses.h>
 #include "buffer.hpp"
 #include "terminal.hpp"
 #include "history.hpp"
-
+#include <unistd.h> // for geteuid()
+#include <sys/stat.h>
 class editor
 {
     int x, y, space_for_numbers; // position on screen

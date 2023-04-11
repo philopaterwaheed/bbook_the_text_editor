@@ -3,6 +3,7 @@
 // @@@@@@@@@@@@@@@@@@ // 
 #include <string>
 #include <vector>
+#include <unistd.h>  // for file input and output
 // ################## // 
 
 
@@ -27,7 +28,7 @@ struct buf {
         std::string remTabs(std::string);
         void copy_line (int ,int ,int ,int ); 
         std::string cut_line (int ,int ,int ,int ) ; 
-        std::string paste_line (int,  std::vector <std::string> & lines_paste , int x =0 ) ; 
+        std::string paste_line (int,  std::vector <std::string> lines_paste , int x =0 ) ; 
 
 }; 
 #endif

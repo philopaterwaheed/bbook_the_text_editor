@@ -17,8 +17,7 @@ editor::editor(std::string file_name)
 {
     x=y=0;mode='n';
     status = "Normal Mode";
-    filename=file_name;
-    
+    filename=file_name;    
     buffer= new buf(); 
     std::ifstream file(file_name); // creates a fstream obj with our file
         if (file.is_open())
@@ -40,6 +39,7 @@ editor::editor(std::string file_name)
         }
     space_for_numbers = buffer->space_for_numbers(buffer->lines.size()); // take the max digits number and store them in a var to make space for line number 
 }
+
 
 void editor::updateStatus()
 {
@@ -91,7 +91,8 @@ void editor::handleInput(int i)
                 scanw("%19s",goto_line);
                 buffer->goto_line=goto_line;
                 int temp ;
-                temp=std::stoi(buffer->goto_line);
+                char * end ; 
+                temp=std::strtol(goto_line , &end , 0 ); // end stores the first char after the int 
                 if (temp>=0 && temp < buffer->lines.size())
                 buffer->line= temp ;
                 if (buffer->l_line+temp- buffer->l_line>=0 && buffer->l_line+ temp- buffer->l_line < buffer->lines.size() )
@@ -182,6 +183,8 @@ void editor::handleInput(int i)
                         case 86 : // shift + v 
                             buffer->paste_line(buffer->line , buffer->lines_paste ,x+ buffer->l_char) ; 
                             break;
+                        default : 
+                            return ; 
                     }
                 break;
             case 'i': // the insert mode 
@@ -558,14 +561,23 @@ void editor::saveFile()
         filename = "untitled";
         
     }
-
-    std::ofstream f (" output_cut");
+    
+    
+    // Check if running with sudo
+        if (geteuid() == 0) {
+            // Change file permissions to make it writable
+            if (chmod(filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) != 0) {
+                std :: cerr << filename << " can't be written to" ;
+                save_status = "cannot write into " +filename +" !";
+            }
+        }
+    std::ofstream f (filename , std::ios::out);
     if(f.is_open())
     {
-        
-        for(int i=0; i<buffer->lines_paste.size(); i++)
+
+        for(int i=0; i<buffer->lines.size(); i++)
         {
-            f << buffer->lines_paste[i] << std::endl;
+            f << buffer->lines[i] << std::endl;
         }
        save_status = "Saved to file to " +filename +" !"; // displays where is the file saved
         
@@ -575,7 +587,12 @@ void editor::saveFile()
         status = "Error: Cannot open file for writing!";
     }
     f.close();
-    
+    // Change file permissions back to read-only if running with sudo
+    if (geteuid() == 0) {
+        if (chmod(filename.c_str(), S_IRUSR | S_IRGRP | S_IROTH) != 0) {
+            // Handle error
+        }
+    }
 }
 //##### place checing ######
 void editor:: goto_lastof_line (int n  )

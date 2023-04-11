@@ -1,9 +1,9 @@
 #include "terminal.hpp"
 #include<iostream>
-
+#include <cstring>
    void Term :: get_input()
     {
-        
+        terminal_buffer_print ();
        // auto push_fun= &Term_output;
             while (1)
                 { 
@@ -55,15 +55,16 @@
 std::string Term::  Term_push  ()
     {
                 
-            char command[128] ;
+            char  command [128] ;
             term_output="";
             // terminal_buffer.push_back(temp);
             // terminal_buffer_print (); 
             // Open pipe to file
 
-            freopen("/dev/null", "w", stderr); // to get red of the stderr becuse it messes the hole thing
+            freopen("/dev/null", "w", stderr); // to get red of the stderr becuse it messes the hole thing into the shadow relm
+            temp += " 2>&1" ; // to add the stderr to stdout 
             FILE* pipe = popen(temp.c_str(), "r");
-
+            
             if (!pipe) {
                 return "popen failed!";
             }
@@ -72,13 +73,13 @@ std::string Term::  Term_push  ()
             while (!feof(pipe)) {
 
                 // use buffer to read and add to result
-                if (fgets(command, 128, pipe) != NULL )
+                if (fgets(command , 128, pipe) != NULL )
                    term_output += command;
                    
             }
 
             pclose(pipe);
-                                                std::stringstream buffer;
+            std::stringstream buffer;
             std::streambuf * old = std::cout.rdbuf(buffer.rdbuf());
             std::cout << buffer.str()<< std::endl;
             term_output += buffer.str();
