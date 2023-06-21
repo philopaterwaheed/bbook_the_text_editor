@@ -7,7 +7,6 @@
     > make
 Here's a raw Markdown README file for the BBook text editor project:
 
-```
 # BBook - The Text Editor
 
 BBook is a lightweight text editor application built using C++. It provides a simple and minimalistic user interface for basic text editing tasks, such as creating, saving, and opening text files.
