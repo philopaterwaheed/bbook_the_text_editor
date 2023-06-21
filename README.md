@@ -5,7 +5,7 @@
 ### compile 
  - if you have make just use the command 
     > make
-Here's a raw Markdown README file for the BBook text editor project:
+
 
 # BBook - The Text Editor
 
