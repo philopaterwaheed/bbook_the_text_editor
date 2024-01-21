@@ -93,7 +93,9 @@ void editor::handleInput(int i)
                 char * end ; 
                 temp=std::strtol(goto_line , &end , 0 ); // end stores the first char after the int 
                 if (temp>=0 && temp < buffer->lines.size())
-                buffer->line= temp ;
+			buffer->line= temp ;
+		else 
+			return;
             	if (buffer->l_line+temp- buffer->l_line>=0 && buffer->l_line+ temp- buffer->l_line < buffer->lines.size() )
                 buffer->l_line+=temp- buffer->l_line;                       
                 goto_firstofline();
