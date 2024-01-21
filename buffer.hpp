@@ -18,7 +18,7 @@ struct buf {
         std::string goto_line; 
         std :: string temp_line; // used in copy and past 
         std :: vector <std::string> lines ; 
-        std:: vector<std::string > lines_paste ;   
+        std:: vector<std::string > lines_paste = {} ; 
         void insertLine(std::string  , int ); // repalce a line with anthor
         void appendLine(std::string);
         void removeLine(int);
@@ -27,7 +27,7 @@ struct buf {
         std:: vector<std::string> getStrings_from_lines(bool ,int ,int ,int ,int); // the bool is for cutting it or not   
         std::string remTabs(std::string);
         void copy_line (int ,int ,int ,int ); 
-        std::string cut_line (int ,int ,int ,int ) ; 
+        void cut_line (int ,int ,int ,int ) ; 
         std::string paste_line (int,  std::vector <std::string> lines_paste , int x =0 ) ; 
 
 }; 

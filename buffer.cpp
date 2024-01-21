@@ -1,4 +1,5 @@
 #include "buffer.hpp"
+#include <iostream>
 // for new programmers 
 // you can declare a method out side of it's class like this 
 // return_type class_name :: function_name (){}
@@ -38,6 +39,7 @@ void buf:: injectIntoLine (std::string line  ,int x )
 }
 void buf::removeLine(int n)
 {
+    lines_paste= {lines[n]};
     lines.erase(lines.begin()+n); // removes the nth line 
     lines.shrink_to_fit();
 }
@@ -45,11 +47,13 @@ void  buf::  copy_line (int sch , int fch ,int sl ,int fli  ){
     this->lines_paste = getStrings_from_lines(false , sch , fch , sl , fli) ; 
 }
 
-std::string buf::  cut_line  (int sch , int fch ,int sl ,int fli ){
+void buf::  cut_line  (int sch , int fch ,int sl ,int fli ){
     this->lines_paste = getStrings_from_lines(true , sch , fch , sl , fli) ; 
 }
 std::string buf::  paste_line (int line , std :: vector  <std::string> lines_paste,int x ){
     int size = lines_paste.size() ; 
+    if (size == 0 )
+	    return "";
     if (size== 1 )
         injectIntoLine(lines_paste[0],x);
     else 
@@ -64,6 +68,7 @@ std::string buf::  paste_line (int line , std :: vector  <std::string> lines_pas
                 lines.insert(lines.begin()+line+i+1,lines_paste[i]);
             }
         }
+    return "";
 }
 
 int buf:: space_for_numbers( int size ){
@@ -78,11 +83,9 @@ int buf:: space_for_numbers( int size ){
 std :: vector <std::string> buf :: getStrings_from_lines (bool cut  , int startc , int endc , int startl , int endl ) 
 {   
     std :: vector <std::string> output = {}; 
-   // if (!cut )
-        // {
-            if (startl== endl)
-                output.push_back( lines[startl].substr(startc , endc+1) ) ;
-            else 
+            if (startl== endl) // if the start line is the same as the end line 
+                output.push_back( lines[startl].substr(startc , endc - startc +1) ) ;  // push the line substringed 
+            else {
                 for (int i = startl ; i <= endl ;  i++)
                     {
                         if ( i == startl)
@@ -92,11 +95,11 @@ std :: vector <std::string> buf :: getStrings_from_lines (bool cut  , int startc
                         else 
                             output.push_back(lines[i]);
                     }
-        // }
+		}
+
     // else 
-    if ( cut)
+    if (cut)
     {
-        bool all_first; 
         int f =1; 
         if (startl== endl)
         lines[startl].erase(startc , endc - startc +1) ; 

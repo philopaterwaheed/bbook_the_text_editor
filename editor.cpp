@@ -27,7 +27,6 @@ editor::editor(std::string file_name)
                         std :: string temp ; // a temp string to store the line 
                         getline(file, temp); // get the line and store it in temp
                         buffer->appendLine(temp); // addes the line to the buffer to show on screen 
-
                     }
 
             }
@@ -59,7 +58,7 @@ void editor::updateStatus()
         status = "Exiting";
         break;
     }
-    status += "\tCOL: " + std::to_string(x+buffer->l_char) + "\tROW: " +std::to_string(buffer->line)+ " "+ std::to_string(buffer->line_st_highlight) +" "+buffer->goto_line; // takes the position and prints them to string
+    status += "\tCOL: " + std::to_string(x+buffer->l_char) + "\tROW: " +std::to_string(buffer->line)+ " "+ std::to_string(buffer->first_ch_highlight) + std::to_string(buffer->last_ch_highlight) +" "" "+buffer->goto_line; // takes the position and prints them to string
 }
 
 void editor::handleInput(int i)
@@ -95,7 +94,7 @@ void editor::handleInput(int i)
                 temp=std::strtol(goto_line , &end , 0 ); // end stores the first char after the int 
                 if (temp>=0 && temp < buffer->lines.size())
                 buffer->line= temp ;
-                if (buffer->l_line+temp- buffer->l_line>=0 && buffer->l_line+ temp- buffer->l_line < buffer->lines.size() )
+            	if (buffer->l_line+temp- buffer->l_line>=0 && buffer->l_line+ temp- buffer->l_line < buffer->lines.size() )
                 buffer->l_line+=temp- buffer->l_line;                       
                 goto_firstofline();
                 y=0;
@@ -256,6 +255,11 @@ void editor::handleInput(int i)
 
 
                     }
+
+if ( at_lastof_line () == 3  ) // make sure every command will be line index safe 
+{
+goto_lastof_line ();
+}
 space_for_numbers = buffer->space_for_numbers(buffer->lines.size()); // updates the spcace for the numbers  
 break_highlight(); // every action breaks the highlight also every return should do  
 }
