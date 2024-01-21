@@ -83,6 +83,8 @@ int buf:: space_for_numbers( int size ){
 std :: vector <std::string> buf :: getStrings_from_lines (bool cut  , int startc , int endc , int startl , int endl ) 
 {   
     std :: vector <std::string> output = {}; 
+    if (startc == -1 || endc  == -1 || startl == -1 || endl == -1  ) // a gared if the user entered control + c on not not selected text 
+	    return output;
             if (startl== endl) // if the start line is the same as the end line 
                 output.push_back( lines[startl].substr(startc , endc - startc +1) ) ;  // push the line substringed 
             else {
