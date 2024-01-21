@@ -16,6 +16,7 @@ BBook is a lightweight text editor application built using C++. It provides a si
 - Simple and intuitive user interface
 - Create, save, and open text files
 - Copy and paste text
+- in editor terminal
 
 ## Getting Started
 
@@ -74,6 +75,6 @@ This document provides a list of keyboard shortcuts for a code editor implemente
 | **Tab** | Insert a tab character. |
 ## Contributing
 
-Contributions to BBook are welcome. To contribute, please fork the repository, make your changes, and submit a pull request. For more information
+Contributions to BBook are welcome. To contribute, please fork the repository, make your changes, and submit a pull request.
 
 
